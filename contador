@@ -1,0 +1,217 @@
+<!-- ... existing code ... -->
+      <div class="flex items-center gap-2">
+        <button onclick="openKeybindModal()" title="Configurar atajos de teclado" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-keyboard text-sky-400"></i>
+          <span class="hidden sm:inline">Teclas</span>
+        </button>
+        <button onclick="openEditModal()" title="Editar números manualmente" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-sliders text-pirate-gold"></i>
+          <span class="hidden sm:inline">Editar</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Banner de Instrucciones para Atajos de Teclado y Fortnite -->
+    <section class="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-sky-500/10 border border-pirate-border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-pirate-gold/15 border border-pirate-gold/30 flex items-center justify-center text-pirate-gold text-lg shrink-0 mt-0.5">
+          <i class="fa-solid fa-keyboard"></i>
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-white uppercase tracking-wider">Atajos de Teclado Personalizados</h2>
+          <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+            Configura Fortnite en <strong>Ventana Pantalla Completa</strong>. 
+            Presiona <kbd id="kb-disp-normal" class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-amber-400 font-mono text-xs uppercase">N</kbd> para sumar un cofre normal, y <kbd id="kb-disp-gomu" class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-purple-400 font-mono text-xs uppercase">F</kbd> para sumar un cofre roto con la fruta. (Puedes cambiar las teclas arriba).
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="openKeybindModal()" class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 text-xs px-3.5 py-2 rounded-xl font-semibold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-gear"></i> Configurar Teclas
+        </button>
+      </div>
+    </section>
+
+    <!-- Resumen Superior: Total Combinado y Probabilidad Acumulada -->
+<!-- ... existing code ... -->
+  <script>
+    // Constante oficial de probabilidad (1 en 137,500)
+    const BASE_ODDS = 137500;
+    const STORAGE_KEY = 'fortnite_pirate_token_tracker_v2';
+
+    // Estado inicial pre-cargado con los datos exactos del usuario y teclas por defecto
+    const DEFAULT_STATE = {
+      normal: 1348,
+      gomu: 106,
+      sessionNormal: 0,
+      sessionGomu: 0,
+      keyNormal: ',',
+      keyGomu: '.',
+      history: []
+    };
+
+    let state = loadState();
+    let currentMultiplier = 1;
+    let listeningKeyType = null; // 'normal' o 'gomu' si estamos esperando nueva tecla
+
+    // Web Audio API para feedback sonoro (sin URLs externas)
+    let audioCtx = null;
+    function playBeep(type = 'normal') {
+<!-- ... existing code ... -->
+    // Cargar estado desde localStorage
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            normal: typeof parsed.normal === 'number' ? parsed.normal : DEFAULT_STATE.normal,
+            gomu: typeof parsed.gomu === 'number' ? parsed.gomu : DEFAULT_STATE.gomu,
+            sessionNormal: typeof parsed.sessionNormal === 'number' ? parsed.sessionNormal : 0,
+            sessionGomu: typeof parsed.sessionGomu === 'number' ? parsed.sessionGomu : 0,
+            keyNormal: typeof parsed.keyNormal === 'string' ? parsed.keyNormal : DEFAULT_STATE.keyNormal,
+            keyGomu: typeof parsed.keyGomu === 'string' ? parsed.keyGomu : DEFAULT_STATE.keyGomu,
+            history: Array.isArray(parsed.history) ? parsed.history : []
+          };
+        }
+      } catch (e) {
+        console.error('Error cargando localStorage:', e);
+      }
+      return { ...DEFAULT_STATE };
+    }
+
+    // Guardar estado en localStorage
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error('Error guardando en localStorage:', e);
+      }
+    }
+<!-- ... existing code ... -->
+    // Renderizar toda la interfaz
+    function render() {
+      const total = state.normal + state.gomu;
+      const sessionTotal = state.sessionNormal + state.sessionGomu;
+
+      // Actualizar números principales
+      document.getElementById('count-normal').textContent = state.normal.toLocaleString('es-MX');
+      document.getElementById('count-gomu').textContent = state.gomu.toLocaleString('es-MX');
+      document.getElementById('total-cofres').textContent = total.toLocaleString('es-MX');
+
+      // Actualizar visualización de teclas en banner y modal
+      const kNorm = (state.keyNormal === ' ') ? 'Espacio' : state.keyNormal.toUpperCase();
+      const kGomu = (state.keyGomu === ' ') ? 'Espacio' : state.keyGomu.toUpperCase();
+      
+      const kbDispNormal = document.getElementById('kb-disp-normal');
+      const kbDispGomu = document.getElementById('kb-disp-gomu');
+      if (kbDispNormal) kbDispNormal.textContent = kNorm;
+      if (kbDispGomu) kbDispGomu.textContent = kGomu;
+
+      const bindLabelNormal = document.getElementById('bind-label-normal');
+      const bindLabelGomu = document.getElementById('bind-label-gomu');
+      if (bindLabelNormal) bindLabelNormal.textContent = kNorm;
+      if (bindLabelGomu) bindLabelGomu.textContent = kGomu;
+
+      // Actualizar contadores de sesión
+      document.getElementById('session-normal').textContent = `+${state.sessionNormal}`;
+<!-- ... existing code ... -->
+    // Funciones de Modales
+    function openKeybindModal() {
+      listeningKeyType = null;
+      document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-keyboard text-sky-400"></i> Configurar Atajos';
+      document.getElementById('modal-keybind-content').classList.remove('hidden');
+      document.getElementById('modal-edit-content').classList.add('hidden');
+      document.getElementById('modal-reset-content').classList.add('hidden');
+      document.getElementById('modal-overlay').classList.remove('hidden');
+      document.getElementById('modal-overlay').classList.add('flex');
+    }
+
+    function openEditModal() {
+      listeningKeyType = null;
+      document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-pirate-gold"></i> Editar Contadores';
+      document.getElementById('modal-keybind-content').classList.add('hidden');
+      document.getElementById('modal-edit-content').classList.remove('hidden');
+      document.getElementById('modal-reset-content').classList.add('hidden');
+      document.getElementById('modal-overlay').classList.remove('hidden');
+      document.getElementById('modal-overlay').classList.add('flex');
+    }
+
+    function openResetModal() {
+      listeningKeyType = null;
+      document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Reiniciar Contadores';
+      document.getElementById('modal-keybind-content').classList.add('hidden');
+      document.getElementById('modal-edit-content').classList.add('hidden');
+      document.getElementById('modal-reset-content').classList.remove('hidden');
+      document.getElementById('modal-overlay').classList.remove('hidden');
+      document.getElementById('modal-overlay').classList.add('flex');
+    }
+
+    function closeModal() {
+      listeningKeyType = null;
+      document.getElementById('modal-overlay').classList.add('hidden');
+      document.getElementById('modal-overlay').classList.remove('flex');
+    }
+
+    function startListeningKey(type) {
+      listeningKeyType = type;
+      const btnId = type === 'normal' ? 'btn-bind-normal' : 'btn-bind-gomu';
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.textContent = 'Presiona una tecla...';
+        btn.className = 'bg-sky-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition animate-pulse';
+      }
+    }
+
+    // Event Listener global para Atajos de Teclado Personalizados
+    window.addEventListener('keydown', (e) => {
+      // Si estamos en modo captura de tecla para reasignar
+      if (listeningKeyType) {
+        e.preventDefault();
+        const pressedKey = e.key.toLowerCase();
+        if (listeningKeyType === 'normal') {
+          state.keyNormal = pressedKey;
+          showToast(`Tecla para cofre normal actualizada a: [${pressedKey.toUpperCase()}]`, 'success');
+        } else if (listeningKeyType === 'gomu') {
+          state.keyGomu = pressedKey;
+          showToast(`Tecla para cofre de fruta actualizada a: [${pressedKey.toUpperCase()}]`, 'success');
+        }
+        saveState();
+        render();
+
+        // Resetear botón de captura
+        const btnId = listeningKeyType === 'normal' ? 'btn-bind-normal' : 'btn-bind-gomu';
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          btn.textContent = 'Cambiar Tecla';
+          btn.className = 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition';
+        }
+        listeningKeyType = null;
+        return;
+      }
+
+      // Evitar que actúe si el usuario está escribiendo en un input o modal abierto
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (!document.getElementById('modal-overlay').classList.contains('hidden') && !listeningKeyType) return;
+
+      const key = e.key.toLowerCase();
+
+      if (key === state.keyNormal) {
+        e.preventDefault();
+        addChests('normal', 1);
+        showToast(`+1 Cofre Normal [${key.toUpperCase()}]`, 'success');
+      } else if (key === state.keyGomu) {
+        e.preventDefault();
+        addChests('gomu', 1);
+        showToast(`+1 Cofre Fruta [${key.toUpperCase()}]`, 'success');
+      }
+    });
+
+    // Inicializar al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      render();
+      updateSimulator();
+    });
+  </script>
+</body>
+</html>
