@@ -60,6 +60,11 @@
       margin: 0; 
     }
   </style>
+  <!-- Configuración PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0e14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body class="min-h-screen pb-12 selection:bg-pirate-gold selection:text-black">
 
@@ -738,6 +743,15 @@
       render();
       updateSimulator();
     });
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+          .catch(err => console.log('Falló el registro del Service Worker:', err));
+      });
+    }
   </script>
 </body>
 </html>
