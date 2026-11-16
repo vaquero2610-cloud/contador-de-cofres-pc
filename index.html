@@ -131,7 +131,7 @@
           <h1 class="font-display font-bold text-xl sm:text-2xl leading-none tracking-wide text-white">
             CAZA DEL <span class="text-pirate-gold">TOKEN PIRATA</span>
           </h1>
-          <p class="text-xs text-slate-400 mt-0.5">Atajos: <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300 font-bold">N</kbd> Normal | <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-purple-300 font-bold">F</kbd> Gomu</p>
+          <p class="text-xs text-slate-400 mt-0.5">Atajos: <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300 font-bold">,</kbd> Normal | <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-purple-300 font-bold">.</kbd> Gomu</p>
         </div>
       </div>
 
@@ -215,7 +215,7 @@
 
     <!-- Paneles de Conteo Táctiles -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <!-- PANEL 1: NORMALES (Tecla N) -->
+      <!-- PANEL 1: NORMALES (Tecla ,) -->
       <div class="bg-pirate-card border-2 border-amber-500/30 rounded-2xl p-5 shadow-lg shadow-amber-950/10 flex flex-col justify-between">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
@@ -223,7 +223,7 @@
               <i class="fa-solid fa-box-open"></i>
             </div>
             <div>
-              <h2 class="font-display font-bold text-xl text-white leading-tight">Cofres Abiertos <span class="text-xs bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">[Tecla N]</span></h2>
+              <h2 class="font-display font-bold text-xl text-white leading-tight">Cofres Abiertos <span class="text-xs bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">[Tecla ,]</span></h2>
               <p class="text-xs text-slate-400">Apertura normal o enterrados</p>
             </div>
           </div>
@@ -249,7 +249,7 @@
         </div>
       </div>
 
-      <!-- PANEL 2: ROTOS CON FRUTA (Tecla F) -->
+      <!-- PANEL 2: ROTOS CON FRUTA (Tecla .) -->
       <div class="bg-pirate-card border-2 border-purple-500/35 rounded-2xl p-5 shadow-lg shadow-purple-950/15 flex flex-col justify-between">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
@@ -257,7 +257,7 @@
               <i class="fa-solid fa-burst"></i>
             </div>
             <div>
-              <h2 class="font-display font-bold text-xl text-white leading-tight">Rotos con Fruta <span class="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded ml-1">[Tecla F]</span></h2>
+              <h2 class="font-display font-bold text-xl text-white leading-tight">Rotos con Fruta <span class="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded ml-1">[Tecla .]</span></h2>
               <p class="text-xs text-slate-400">Destruidos con Gomu-Gomu / explosivos</p>
             </div>
           </div>
@@ -423,22 +423,21 @@
       render();
     }
 
-    // Listener de Atajos de Teclado (N y F)
+    // Listener de Atajos de Teclado (, y .)
     window.addEventListener('keydown', (e) => {
-      // Evitar que se active si estás escribiendo en algún input o modal
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
-      const key = e.key.toLowerCase();
-      if (key === 'n') {
+      const key = e.key;
+      if (key === ',') {
         addChests('normal', 1);
-        showToast('+1 Cofre Normal (Tecla N)', 'success');
-      } else if (key === 'f') {
+        showToast('+1 Cofre Normal (Tecla ,)', 'success');
+      } else if (key === '.') {
         addChests('gomu', 1);
-        showToast('+1 Cofre Gomu-Gomu (Tecla F)', 'success');
+        showToast('+1 Cofre Gomu-Gomu (Tecla .)', 'success');
       }
     });
 
-    // Función para abrir la mini ventana flotante "Fijar mientras juego" (Picture-in-Picture)
+    // Función para abrir la mini ventana flotante con diseño limpio tipo overlay
     async function togglePip() {
       if (!('documentPictureInPicture' in window)) {
         showToast('Tu navegador no soporta ventanas flotantes PiP. Usa Google Chrome o Edge actualizado.', 'warning');
@@ -453,41 +452,49 @@
         }
 
         pipWindowInstance = await window.documentPictureInPicture.requestWindow({
-          width: 300,
-          height: 190
+          width: 270,
+          height: 150
         });
 
-        // Copiar los estilos de Tailwind y fuentes a la nueva ventana flotante
         pipWindowInstance.document.head.innerHTML = document.head.innerHTML;
 
-        // Crear la estructura interna del mini panel flotante
         const container = pipWindowInstance.document.createElement('div');
-        container.className = "bg-[#0b0e14] text-white p-3 h-full flex flex-col justify-between font-sans select-none";
+        container.className = "bg-[#0b0e14] text-white p-3 h-full flex flex-col justify-between font-sans select-none overflow-hidden";
         container.innerHTML = `
-          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-            <span class="font-bold text-xs text-amber-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-skull-crossbones"></i> CONTADOR PIRATA
+          <div class="flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-1.5">
+            <span class="text-amber-400 flex items-center gap-1">
+              <i class="fa-solid fa-skull-crossbones"></i> COFRES
             </span>
-            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">Siempre Visible</span>
+            <span class="text-[10px] text-slate-500">[,] / [.]</span>
           </div>
-          <div class="grid grid-cols-2 gap-2 my-2">
-            <div class="bg-[#131822] p-2 rounded-xl text-center border border-amber-500/30">
-              <div class="text-[10px] text-slate-400 uppercase font-semibold">Normal [N]</div>
-              <div id="pip-normal" class="text-2xl font-display font-bold text-amber-400">${state.normal.toLocaleString('es-MX')}</div>
+
+          <div class="grid grid-cols-12 gap-2 my-auto">
+            <!-- Total Grande Izquierda -->
+            <div class="col-span-7 bg-[#131822] border border-slate-800 rounded-xl p-2 flex flex-col justify-center">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total</span>
+              <div id="pip-total" class="font-display font-bold text-3xl text-amber-400 leading-none mt-1">${(state.normal + state.gomu).toLocaleString('es-MX')}</div>
             </div>
-            <div class="bg-[#131822] p-2 rounded-xl text-center border border-purple-500/30">
-              <div class="text-[10px] text-slate-400 uppercase font-semibold">Gomu [F]</div>
-              <div id="pip-gomu" class="text-2xl font-display font-bold text-purple-400">${state.gomu.toLocaleString('es-MX')}</div>
+
+            <!-- Sesión y Desglose Derecha -->
+            <div class="col-span-5 flex flex-col gap-1.5">
+              <div class="bg-[#131822] border border-slate-800 rounded-xl p-1.5 text-center flex flex-col justify-center">
+                <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Sesión</span>
+                <div id="pip-session" class="font-display font-bold text-sm text-emerald-400 leading-tight">+${state.sessionNormal + state.sessionGomu}</div>
+              </div>
+              <div class="bg-[#131822] border border-slate-800 rounded-xl p-1 text-center flex justify-around items-center text-[10px]">
+                <span class="text-amber-400 font-bold" title="Normal">,: <span id="pip-normal" class="text-white font-normal ml-0.5">${state.normal}</span></span>
+                <span class="text-purple-400 font-bold" title="Gomu">.: <span id="pip-gomu" class="text-white font-normal ml-0.5">${state.gomu}</span></span>
+              </div>
             </div>
           </div>
-          <div class="text-center text-[10px] text-slate-400 flex justify-between px-1">
-            <span>Total: <strong id="pip-total" class="text-white">${(state.normal + state.gomu).toLocaleString('es-MX')}</strong></span>
-            <span class="text-emerald-400">Presiona N o F en el juego</span>
+
+          <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
+            <span>Tienda Pirata</span>
+            <span class="text-emerald-400 font-medium">● Activo</span>
           </div>
         `;
         pipWindowInstance.document.body.appendChild(container);
 
-        // Cuando la ventana flotante se cierre por el usuario
         pipWindowInstance.addEventListener('unload', () => {
           pipWindowInstance = null;
         });
@@ -544,14 +551,16 @@
       document.getElementById('session-total').textContent = `+${sessionTotal}`;
       document.getElementById('banner-session-count').textContent = `${sessionTotal} cofre${sessionTotal === 1 ? '' : 's'}`;
 
-      // Sincronizar también con la mini ventana flotante si está abierta
       if (pipWindowInstance && !pipWindowInstance.closed) {
+        const pTotal = pipWindowInstance.document.getElementById('pip-total');
+        const pSession = pipWindowInstance.document.getElementById('pip-session');
         const pNorm = pipWindowInstance.document.getElementById('pip-normal');
         const pGomu = pipWindowInstance.document.getElementById('pip-gomu');
-        const pTotal = pipWindowInstance.document.getElementById('pip-total');
-        if (pNorm) pNorm.textContent = state.normal.toLocaleString('es-MX');
-        if (pGomu) pGomu.textContent = state.gomu.toLocaleString('es-MX');
+        
         if (pTotal) pTotal.textContent = total.toLocaleString('es-MX');
+        if (pSession) pSession.textContent = `+${sessionTotal}`;
+        if (pNorm) pNorm.textContent = state.normal;
+        if (pGomu) pGomu.textContent = state.gomu;
       }
 
       const prob = 1 - Math.pow(1 - (1 / BASE_ODDS), total);
@@ -744,12 +753,14 @@
       updateSimulator();
     });
   </script>
+
+  <!-- Script para Service Worker PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
-          .catch(err => console.log('Falló el registro del Service Worker:', err));
+          .then(reg => console.log('Service Worker registrado:', reg.scope))
+          .catch(err => console.log('Error Service Worker:', err));
       });
     }
   </script>
