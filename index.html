@@ -51,11 +51,9 @@
     .btn-tactile:active {
       transform: scale(0.94);
     }
-    /* Animación suave para barras */
     .progress-fill {
       transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    /* Ocultar flechas en inputs numéricos */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { 
       -webkit-appearance: none; 
@@ -71,7 +69,7 @@
     <span id="toast-msg" class="text-sm font-medium">Acción guardada</span>
   </div>
 
-  <!-- Modal de Confirmación / Edición Manual -->
+  <!-- Modal de Edición / Reinicio -->
   <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden items-center justify-center p-4">
     <div class="bg-pirate-card border border-pirate-border rounded-2xl max-w-md w-full p-6 shadow-2xl">
       <div class="flex items-center justify-between mb-4">
@@ -100,7 +98,7 @@
 
       <div id="modal-reset-content" class="hidden space-y-4">
         <p class="text-slate-300 text-sm leading-relaxed">
-          ¿Estás seguro de que deseas reiniciar tus contadores a cero (o volver a tus valores iniciales de 1,348 y 106)? Esta acción borrará el historial guardado.
+          ¿Estás seguro de que deseas reiniciar tus contadores? Esta acción borrará el historial guardado.
         </p>
         <div class="flex flex-col gap-2.5 pt-2">
           <button onclick="resetToDefault()" class="w-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-semibold py-3 rounded-xl transition">
@@ -128,11 +126,16 @@
           <h1 class="font-display font-bold text-xl sm:text-2xl leading-none tracking-wide text-white">
             CAZA DEL <span class="text-pirate-gold">TOKEN PIRATA</span>
           </h1>
-          <p class="text-xs text-slate-400 mt-0.5">Probabilidad base oficial: 1 en 137,500 cofres</p>
+          <p class="text-xs text-slate-400 mt-0.5">Atajos: <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300 font-bold">N</kbd> Normal | <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-purple-300 font-bold">F</kbd> Gomu</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
+        <!-- Botón para Fijar Ventana Flotante -->
+        <button onclick="togglePip()" title="Abrir mini ventana flotante siempre visible" class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 text-sky-300 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-clone"></i>
+          <span class="hidden sm:inline">Fijar Ventana</span>
+        </button>
         <button onclick="openEditModal()" title="Editar números manualmente" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
           <i class="fa-solid fa-sliders text-pirate-gold"></i>
           <span class="hidden sm:inline">Editar</span>
@@ -147,9 +150,8 @@
 
   <main class="max-w-5xl mx-auto px-4 pt-6 space-y-6">
 
-    <!-- Resumen Superior: Total Combinado y Probabilidad Acumulada -->
+    <!-- Resumen Superior -->
     <section class="grid grid-cols-1 md:grid-cols-12 gap-4">
-      <!-- Tarjeta Total de Cofres -->
       <div class="md:col-span-5 bg-pirate-card border border-pirate-border rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
         <div class="absolute -right-6 -bottom-6 text-slate-800/40 pointer-events-none">
           <i class="fa-solid fa-treasure-chest text-9xl"></i>
@@ -168,7 +170,6 @@
         </div>
       </div>
 
-      <!-- Tarjeta Probabilidad Acumulada & Hitos -->
       <div class="md:col-span-7 bg-pirate-card border border-pirate-border rounded-2xl p-5 flex flex-col justify-between">
         <div class="flex flex-wrap items-start justify-between gap-2">
           <div>
@@ -189,7 +190,6 @@
           </span>
         </div>
 
-        <!-- Barra de progreso hacia hitos -->
         <div class="mt-4">
           <div class="flex justify-between text-xs text-slate-400 mb-1.5">
             <span id="milestone-label">Progreso hacia 10,000 cofres (7.01% prob.)</span>
@@ -198,7 +198,6 @@
           <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
             <div id="milestone-bar" class="progress-fill h-full bg-gradient-to-r from-pirate-gold to-pirate-gomu rounded-full" style="width: 14.5%"></div>
           </div>
-          <!-- Marcadores de referencia rápida -->
           <div class="grid grid-cols-4 gap-1 text-[10px] sm:text-xs text-slate-500 mt-2 text-center">
             <div id="m-1k" class="p-1 rounded bg-slate-900/60">1k (0.72%)</div>
             <div id="m-10k" class="p-1 rounded bg-slate-900/60">10k (7.01%)</div>
@@ -211,8 +210,7 @@
 
     <!-- Paneles de Conteo Táctiles -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      
-      <!-- PANEL 1: COFRES ABIERTOS NORMALMENTE -->
+      <!-- PANEL 1: NORMALES (Tecla N) -->
       <div class="bg-pirate-card border-2 border-amber-500/30 rounded-2xl p-5 shadow-lg shadow-amber-950/10 flex flex-col justify-between">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
@@ -220,7 +218,7 @@
               <i class="fa-solid fa-box-open"></i>
             </div>
             <div>
-              <h2 class="font-display font-bold text-xl text-white leading-tight">Cofres Abiertos</h2>
+              <h2 class="font-display font-bold text-xl text-white leading-tight">Cofres Abiertos <span class="text-xs bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">[Tecla N]</span></h2>
               <p class="text-xs text-slate-400">Apertura normal o enterrados</p>
             </div>
           </div>
@@ -230,7 +228,6 @@
           </div>
         </div>
 
-        <!-- Botones grandes de acción rápida -->
         <div class="grid grid-cols-4 gap-2.5 mt-2">
           <button onclick="addChests('normal', -1)" class="btn-tactile bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
             -1
@@ -247,7 +244,7 @@
         </div>
       </div>
 
-      <!-- PANEL 2: COFRES ROTOS CON FRUTA GOMU-GOMU -->
+      <!-- PANEL 2: ROTOS CON FRUTA (Tecla F) -->
       <div class="bg-pirate-card border-2 border-purple-500/35 rounded-2xl p-5 shadow-lg shadow-purple-950/15 flex flex-col justify-between">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
@@ -255,7 +252,7 @@
               <i class="fa-solid fa-burst"></i>
             </div>
             <div>
-              <h2 class="font-display font-bold text-xl text-white leading-tight">Rotos con Fruta</h2>
+              <h2 class="font-display font-bold text-xl text-white leading-tight">Rotos con Fruta <span class="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded ml-1">[Tecla F]</span></h2>
               <p class="text-xs text-slate-400">Destruidos con Gomu-Gomu / explosivos</p>
             </div>
           </div>
@@ -265,7 +262,6 @@
           </div>
         </div>
 
-        <!-- Botones grandes de acción rápida -->
         <div class="grid grid-cols-4 gap-2.5 mt-2">
           <button onclick="addChests('gomu', -1)" class="btn-tactile bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
             -1
@@ -281,10 +277,9 @@
           </button>
         </div>
       </div>
-
     </section>
 
-    <!-- Barra de Acción Rápida para Guardar Partida -->
+    <!-- Guardar Partida -->
     <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-3 text-center sm:text-left">
         <div class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
@@ -300,10 +295,8 @@
       </button>
     </section>
 
-    <!-- Calculadora de Próxima Partida (Modo Escuadrón / Hora del Tesoro) & Historial -->
+    <!-- Simulador e Historial -->
     <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      
-      <!-- Calculadora de Próxima Partida -->
       <div class="lg:col-span-6 bg-pirate-card border border-pirate-border rounded-2xl p-5">
         <h3 class="font-display font-bold text-lg text-white flex items-center gap-2 mb-1">
           <i class="fa-solid fa-users text-sky-400"></i> Simulador Próxima Partida
@@ -340,7 +333,6 @@
             </div>
           </div>
 
-          <!-- Resultado de la simulación -->
           <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
             <div>
               <div class="text-xs text-slate-400">Probabilidad en esa partida:</div>
@@ -354,7 +346,6 @@
         </div>
       </div>
 
-      <!-- Registro Histórico de Partidas -->
       <div class="lg:col-span-6 bg-pirate-card border border-pirate-border rounded-2xl p-5 flex flex-col">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">
@@ -364,20 +355,16 @@
         </div>
 
         <div id="history-list" class="flex-1 overflow-y-auto max-h-64 space-y-2 pr-1">
-          <!-- Se llena dinámicamente con JS -->
+          <!-- Dinámico -->
         </div>
       </div>
-
     </section>
-
   </main>
 
   <script>
-    // Constante oficial de probabilidad (1 en 137,500)
     const BASE_ODDS = 137500;
     const STORAGE_KEY = 'fortnite_pirate_token_tracker_v1';
 
-    // Estado inicial pre-cargado con los datos exactos del usuario
     const DEFAULT_STATE = {
       normal: 1348,
       gomu: 106,
@@ -388,8 +375,8 @@
 
     let state = loadState();
     let currentMultiplier = 1;
+    let pipWindowInstance = null;
 
-    // Cargar estado desde localStorage
     function loadState() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -409,7 +396,6 @@
       return { ...DEFAULT_STATE };
     }
 
-    // Guardar estado en localStorage
     function saveState() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -418,7 +404,6 @@
       }
     }
 
-    // Sumar o restar cofres
     function addChests(type, amount) {
       if (type === 'normal') {
         if (state.normal + amount < 0) return;
@@ -433,7 +418,80 @@
       render();
     }
 
-    // Guardar partida actual en historial
+    // Listener de Atajos de Teclado (N y F)
+    window.addEventListener('keydown', (e) => {
+      // Evitar que se active si estás escribiendo en algún input o modal
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'n') {
+        addChests('normal', 1);
+        showToast('+1 Cofre Normal (Tecla N)', 'success');
+      } else if (key === 'f') {
+        addChests('gomu', 1);
+        showToast('+1 Cofre Gomu-Gomu (Tecla F)', 'success');
+      }
+    });
+
+    // Función para abrir la mini ventana flotante "Fijar mientras juego" (Picture-in-Picture)
+    async function togglePip() {
+      if (!('documentPictureInPicture' in window)) {
+        showToast('Tu navegador no soporta ventanas flotantes PiP. Usa Google Chrome o Edge actualizado.', 'warning');
+        return;
+      }
+
+      try {
+        if (pipWindowInstance) {
+          pipWindowInstance.close();
+          pipWindowInstance = null;
+          return;
+        }
+
+        pipWindowInstance = await window.documentPictureInPicture.requestWindow({
+          width: 300,
+          height: 190
+        });
+
+        // Copiar los estilos de Tailwind y fuentes a la nueva ventana flotante
+        pipWindowInstance.document.head.innerHTML = document.head.innerHTML;
+
+        // Crear la estructura interna del mini panel flotante
+        const container = pipWindowInstance.document.createElement('div');
+        container.className = "bg-[#0b0e14] text-white p-3 h-full flex flex-col justify-between font-sans select-none";
+        container.innerHTML = `
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <span class="font-bold text-xs text-amber-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-skull-crossbones"></i> CONTADOR PIRATA
+            </span>
+            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">Siempre Visible</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 my-2">
+            <div class="bg-[#131822] p-2 rounded-xl text-center border border-amber-500/30">
+              <div class="text-[10px] text-slate-400 uppercase font-semibold">Normal [N]</div>
+              <div id="pip-normal" class="text-2xl font-display font-bold text-amber-400">${state.normal.toLocaleString('es-MX')}</div>
+            </div>
+            <div class="bg-[#131822] p-2 rounded-xl text-center border border-purple-500/30">
+              <div class="text-[10px] text-slate-400 uppercase font-semibold">Gomu [F]</div>
+              <div id="pip-gomu" class="text-2xl font-display font-bold text-purple-400">${state.gomu.toLocaleString('es-MX')}</div>
+            </div>
+          </div>
+          <div class="text-center text-[10px] text-slate-400 flex justify-between px-1">
+            <span>Total: <strong id="pip-total" class="text-white">${(state.normal + state.gomu).toLocaleString('es-MX')}</strong></span>
+            <span class="text-emerald-400">Presiona N o F en el juego</span>
+          </div>
+        `;
+        pipWindowInstance.document.body.appendChild(container);
+
+        // Cuando la ventana flotante se cierre por el usuario
+        pipWindowInstance.addEventListener('unload', () => {
+          pipWindowInstance = null;
+        });
+
+      } catch (err) {
+        console.error('Error al abrir PiP:', err);
+      }
+    }
+
     function saveCurrentMatch() {
       const sessionSum = state.sessionNormal + state.sessionGomu;
       if (sessionSum === 0) {
@@ -453,42 +511,44 @@
         total: sessionSum
       });
 
-      // Mantener máximo 50 partidas recientes
-      if (state.history.length > 50) {
-        state.history.pop();
-      }
+      if (state.history.length > 50) state.history.pop();
 
       state.sessionNormal = 0;
       state.sessionGomu = 0;
       saveState();
       render();
-      showToast(`Partida guardada (+${sessionSum} cofres registrados)`, 'success');
+      showToast(`Partida guardada (+${sessionSum} cofres)`, 'success');
     }
 
-    // Eliminar una entrada del historial (solo borra el registro visual, no resta del total global)
     function deleteHistoryItem(id) {
       state.history = state.history.filter(item => item.id !== id);
       saveState();
       renderHistory();
     }
 
-    // Renderizar toda la interfaz
     function render() {
       const total = state.normal + state.gomu;
       const sessionTotal = state.sessionNormal + state.sessionGomu;
 
-      // Actualizar números principales
       document.getElementById('count-normal').textContent = state.normal.toLocaleString('es-MX');
       document.getElementById('count-gomu').textContent = state.gomu.toLocaleString('es-MX');
       document.getElementById('total-cofres').textContent = total.toLocaleString('es-MX');
 
-      // Actualizar contadores de sesión
       document.getElementById('session-normal').textContent = `+${state.sessionNormal}`;
       document.getElementById('session-gomu').textContent = `+${state.sessionGomu}`;
       document.getElementById('session-total').textContent = `+${sessionTotal}`;
       document.getElementById('banner-session-count').textContent = `${sessionTotal} cofre${sessionTotal === 1 ? '' : 's'}`;
 
-      // Cálculo de probabilidad acumulada exacta: 1 - (1 - 1/137500)^total
+      // Sincronizar también con la mini ventana flotante si está abierta
+      if (pipWindowInstance && !pipWindowInstance.closed) {
+        const pNorm = pipWindowInstance.document.getElementById('pip-normal');
+        const pGomu = pipWindowInstance.document.getElementById('pip-gomu');
+        const pTotal = pipWindowInstance.document.getElementById('pip-total');
+        if (pNorm) pNorm.textContent = state.normal.toLocaleString('es-MX');
+        if (pGomu) pGomu.textContent = state.gomu.toLocaleString('es-MX');
+        if (pTotal) pTotal.textContent = total.toLocaleString('es-MX');
+      }
+
       const prob = 1 - Math.pow(1 - (1 / BASE_ODDS), total);
       const probPercent = (prob * 100);
       document.getElementById('prob-acumulada').textContent = `${probPercent.toFixed(3)}%`;
@@ -497,10 +557,9 @@
         const oneInX = Math.round(1 / prob);
         document.getElementById('prob-fraccion').textContent = `(1 de cada ${oneInX.toLocaleString('es-MX')} jugadores con tus cofres)`;
       } else {
-        document.getElementById('prob-fraccion').textContent = `(Abre tu primer cofre para comenzar)`;
+        document.getElementById('prob-fraccion').textContent = `(Abre tu primer cofre)`;
       }
 
-      // Actualizar barra de hitos
       updateMilestones(total);
       renderHistory();
     }
@@ -521,7 +580,6 @@
       document.getElementById('milestone-percent').textContent = `${pct.toFixed(1)}%`;
       document.getElementById('milestone-bar').style.width = `${pct}%`;
 
-      // Iluminar hitos ya alcanzados
       const badges = [
         { id: 'm-1k', val: 1000 },
         { id: 'm-10k', val: 10000 },
@@ -539,7 +597,6 @@
       });
     }
 
-    // Simulador de próxima partida
     function setSimChests(val) {
       document.getElementById('squad-chests').value = val;
       updateSimulator();
@@ -570,7 +627,6 @@
       document.getElementById('sim-odds').textContent = `1 de cada ${oneInMatches.toLocaleString('es-MX')} partidas`;
     }
 
-    // Renderizar historial
     function renderHistory() {
       const list = document.getElementById('history-list');
       document.getElementById('history-count').textContent = `${state.history.length} partida${state.history.length === 1 ? '' : 's'}`;
@@ -609,7 +665,6 @@
       `).join('');
     }
 
-    // Funciones de Modales
     function openEditModal() {
       document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-pirate-gold"></i> Editar Contadores';
       document.getElementById('edit-normal').value = state.normal;
@@ -641,7 +696,7 @@
       saveState();
       render();
       closeModal();
-      showToast('Contadores actualizados correctamente', 'success');
+      showToast('Contadores actualizados', 'success');
     }
 
     function resetToDefault() {
@@ -649,7 +704,7 @@
       saveState();
       render();
       closeModal();
-      showToast('Valores iniciales restaurados (1,454 cofres)', 'success');
+      showToast('Valores iniciales restaurados', 'success');
     }
 
     function resetToZero() {
@@ -657,10 +712,9 @@
       saveState();
       render();
       closeModal();
-      showToast('Todos los contadores se han reiniciado a 0', 'success');
+      showToast('Contadores reiniciados a 0', 'success');
     }
 
-    // Notificación Toast
     let toastTimeout;
     function showToast(msg, type = 'success') {
       const toast = document.getElementById('toast');
@@ -680,7 +734,6 @@
       }, 2800);
     }
 
-    // Inicializar al cargar
     window.addEventListener('DOMContentLoaded', () => {
       render();
       updateSimulator();
