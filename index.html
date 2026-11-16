@@ -1,63 +1,394 @@
-<!-- ... existing code ... -->
-      <div class="flex items-center gap-2">
-        <button onclick="openKeybindModal()" title="Configurar atajos de teclado" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-keyboard text-sky-400"></i>
-          <span class="hidden sm:inline">Teclas</span>
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contador de Cofres | Token Tienda Pirata</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Rajdhani para toque gamer -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Rajdhani', 'sans-serif'],
+          },
+          colors: {
+            pirate: {
+              bg: '#0b0e14',
+              card: '#131822',
+              cardHover: '#19202e',
+              border: '#232c3d',
+              gold: '#f5b942',
+              goldDark: '#b8821c',
+              gomu: '#a855f7',
+              gomuDark: '#7e22ce',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0b0e14;
+      color: #f3f4f6;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-tactile {
+      transition: transform 0.08s ease, filter 0.15s ease;
+    }
+    .btn-tactile:active {
+      transform: scale(0.94);
+    }
+    /* Animación suave para barras */
+    .progress-fill {
+      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    /* Ocultar flechas en inputs numéricos */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12 selection:bg-pirate-gold selection:text-black">
+
+  <!-- Notificación Toast flotante -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-pirate-gold/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-pirate-gold"></i>
+    <span id="toast-msg" class="text-sm font-medium">Acción guardada</span>
+  </div>
+
+  <!-- Modal de Confirmación / Edición Manual -->
+  <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden items-center justify-center p-4">
+    <div class="bg-pirate-card border border-pirate-border rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="modal-title" class="text-xl font-display font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-pirate-gold"></i> Editar Contadores
+        </h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
         </button>
+      </div>
+      
+      <div id="modal-edit-content" class="space-y-4">
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1.5">Cofres Abiertos (Normal)</label>
+          <input type="number" id="edit-normal" min="0" class="w-full bg-slate-900 border border-slate-700 focus:border-pirate-gold rounded-xl px-4 py-3 text-white font-bold text-lg outline-none">
+        </div>
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1.5">Cofres Rotos con Fruta Gomu-Gomu</label>
+          <input type="number" id="edit-gomu" min="0" class="w-full bg-slate-900 border border-slate-700 focus:border-pirate-gomu rounded-xl px-4 py-3 text-white font-bold text-lg outline-none">
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-3 rounded-xl transition">Cancelar</button>
+          <button onclick="saveManualEdit()" class="flex-1 bg-pirate-gold hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Guardar Cambios</button>
+        </div>
+      </div>
+
+      <div id="modal-reset-content" class="hidden space-y-4">
+        <p class="text-slate-300 text-sm leading-relaxed">
+          ¿Estás seguro de que deseas reiniciar tus contadores a cero (o volver a tus valores iniciales de 1,348 y 106)? Esta acción borrará el historial guardado.
+        </p>
+        <div class="flex flex-col gap-2.5 pt-2">
+          <button onclick="resetToDefault()" class="w-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-semibold py-3 rounded-xl transition">
+            Restaurar valores iniciales (1,454 cofres)
+          </button>
+          <button onclick="resetToZero()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition">
+            Reiniciar todo a 0
+          </button>
+          <button onclick="closeModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl transition mt-1">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Encabezado Principal -->
+  <header class="border-b border-pirate-border bg-pirate-card/80 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pirate-gold to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20">
+          <i class="fa-solid fa-skull-crossbones text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-xl sm:text-2xl leading-none tracking-wide text-white">
+            CAZA DEL <span class="text-pirate-gold">TOKEN PIRATA</span>
+          </h1>
+          <p class="text-xs text-slate-400 mt-0.5">Probabilidad base oficial: 1 en 137,500 cofres</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
         <button onclick="openEditModal()" title="Editar números manualmente" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
           <i class="fa-solid fa-sliders text-pirate-gold"></i>
           <span class="hidden sm:inline">Editar</span>
         </button>
+        <button onclick="openResetModal()" title="Opciones de reinicio" class="bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-800 text-slate-300 hover:text-rose-300 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span class="hidden sm:inline">Reiniciar</span>
+        </button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Banner de Instrucciones para Atajos de Teclado y Fortnite -->
-    <section class="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-sky-500/10 border border-pirate-border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-start gap-3.5">
-        <div class="w-10 h-10 rounded-xl bg-pirate-gold/15 border border-pirate-gold/30 flex items-center justify-center text-pirate-gold text-lg shrink-0 mt-0.5">
-          <i class="fa-solid fa-keyboard"></i>
+  <main class="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+
+    <!-- Resumen Superior: Total Combinado y Probabilidad Acumulada -->
+    <section class="grid grid-cols-1 md:grid-cols-12 gap-4">
+      <!-- Tarjeta Total de Cofres -->
+      <div class="md:col-span-5 bg-pirate-card border border-pirate-border rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 text-slate-800/40 pointer-events-none">
+          <i class="fa-solid fa-treasure-chest text-9xl"></i>
         </div>
         <div>
-          <h2 class="text-sm font-bold text-white uppercase tracking-wider">Atajos de Teclado Personalizados</h2>
-          <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-            Configura Fortnite en <strong>Ventana Pantalla Completa</strong>. 
-            Presiona <kbd id="kb-disp-normal" class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-amber-400 font-mono text-xs uppercase">N</kbd> para sumar un cofre normal, y <kbd id="kb-disp-gomu" class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-purple-400 font-mono text-xs uppercase">F</kbd> para sumar un cofre roto con la fruta. (Puedes cambiar las teclas arriba).
-          </p>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-pirate-gold"></i> Total Cofres Registrados
+          </span>
+          <div id="total-cofres" class="font-display font-bold text-5xl sm:text-6xl text-white mt-2 tracking-tight">
+            1,454
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+          <span>Sesión actual: <strong id="session-total" class="text-emerald-400 font-bold">+0</strong></span>
+          <span>100% válidos para el Token</span>
         </div>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button onclick="openKeybindModal()" class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 text-xs px-3.5 py-2 rounded-xl font-semibold transition flex items-center gap-1.5">
-          <i class="fa-solid fa-gear"></i> Configurar Teclas
-        </button>
+
+      <!-- Tarjeta Probabilidad Acumulada & Hitos -->
+      <div class="md:col-span-7 bg-pirate-card border border-pirate-border rounded-2xl p-5 flex flex-col justify-between">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-line text-pirate-gomu"></i> Probabilidad Acumulada Real
+            </span>
+            <div class="flex items-baseline gap-3 mt-1.5">
+              <span id="prob-acumulada" class="font-display font-bold text-4xl sm:text-5xl text-pirate-gold">
+                1.052%
+              </span>
+              <span id="prob-fraccion" class="text-xs sm:text-sm text-slate-400 font-medium">
+                (1 de cada 95 jugadores con tus cofres)
+              </span>
+            </div>
+          </div>
+          <span id="next-milestone-badge" class="bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold px-3 py-1 rounded-full">
+            Siguiente hito: 10,000
+          </span>
+        </div>
+
+        <!-- Barra de progreso hacia hitos -->
+        <div class="mt-4">
+          <div class="flex justify-between text-xs text-slate-400 mb-1.5">
+            <span id="milestone-label">Progreso hacia 10,000 cofres (7.01% prob.)</span>
+            <span id="milestone-percent" class="font-bold text-slate-200">14.5%</span>
+          </div>
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+            <div id="milestone-bar" class="progress-fill h-full bg-gradient-to-r from-pirate-gold to-pirate-gomu rounded-full" style="width: 14.5%"></div>
+          </div>
+          <!-- Marcadores de referencia rápida -->
+          <div class="grid grid-cols-4 gap-1 text-[10px] sm:text-xs text-slate-500 mt-2 text-center">
+            <div id="m-1k" class="p-1 rounded bg-slate-900/60">1k (0.72%)</div>
+            <div id="m-10k" class="p-1 rounded bg-slate-900/60">10k (7.01%)</div>
+            <div id="m-95k" class="p-1 rounded bg-slate-900/60">95.3k (50%)</div>
+            <div id="m-137k" class="p-1 rounded bg-slate-900/60">137.5k (63.2%)</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Resumen Superior: Total Combinado y Probabilidad Acumulada -->
-<!-- ... existing code ... -->
+    <!-- Paneles de Conteo Táctiles -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      
+      <!-- PANEL 1: COFRES ABIERTOS NORMALMENTE -->
+      <div class="bg-pirate-card border-2 border-amber-500/30 rounded-2xl p-5 shadow-lg shadow-amber-950/10 flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-pirate-gold text-2xl">
+              <i class="fa-solid fa-box-open"></i>
+            </div>
+            <div>
+              <h2 class="font-display font-bold text-xl text-white leading-tight">Cofres Abiertos</h2>
+              <p class="text-xs text-slate-400">Apertura normal o enterrados</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="count-normal" class="font-display font-bold text-4xl text-pirate-gold">1,348</span>
+            <div class="text-[11px] text-emerald-400 font-semibold">Sesión: <span id="session-normal">+0</span></div>
+          </div>
+        </div>
+
+        <!-- Botones grandes de acción rápida -->
+        <div class="grid grid-cols-4 gap-2.5 mt-2">
+          <button onclick="addChests('normal', -1)" class="btn-tactile bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
+            -1
+          </button>
+          <button onclick="addChests('normal', 1)" class="btn-tactile bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-display font-extrabold text-2xl py-4 rounded-xl shadow-md shadow-amber-500/20 flex items-center justify-center">
+            +1
+          </button>
+          <button onclick="addChests('normal', 5)" class="btn-tactile bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
+            +5
+          </button>
+          <button onclick="addChests('normal', 10)" class="btn-tactile bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
+            +10
+          </button>
+        </div>
+      </div>
+
+      <!-- PANEL 2: COFRES ROTOS CON FRUTA GOMU-GOMU -->
+      <div class="bg-pirate-card border-2 border-purple-500/35 rounded-2xl p-5 shadow-lg shadow-purple-950/15 flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-pirate-gomu text-2xl">
+              <i class="fa-solid fa-burst"></i>
+            </div>
+            <div>
+              <h2 class="font-display font-bold text-xl text-white leading-tight">Rotos con Fruta</h2>
+              <p class="text-xs text-slate-400">Destruidos con Gomu-Gomu / explosivos</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="count-gomu" class="font-display font-bold text-4xl text-pirate-gomu">106</span>
+            <div class="text-[11px] text-emerald-400 font-semibold">Sesión: <span id="session-gomu">+0</span></div>
+          </div>
+        </div>
+
+        <!-- Botones grandes de acción rápida -->
+        <div class="grid grid-cols-4 gap-2.5 mt-2">
+          <button onclick="addChests('gomu', -1)" class="btn-tactile bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
+            -1
+          </button>
+          <button onclick="addChests('gomu', 1)" class="btn-tactile bg-gradient-to-b from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white font-display font-extrabold text-2xl py-4 rounded-xl shadow-md shadow-purple-500/25 flex items-center justify-center">
+            +1
+          </button>
+          <button onclick="addChests('gomu', 5)" class="btn-tactile bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
+            +5
+          </button>
+          <button onclick="addChests('gomu', 10)" class="btn-tactile bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-display font-bold text-xl py-4 rounded-xl flex items-center justify-center">
+            +10
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Barra de Acción Rápida para Guardar Partida -->
+    <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3 text-center sm:text-left">
+        <div class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+          <i class="fa-solid fa-flag-checkered"></i>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-white">¿Terminaste tu partida?</p>
+          <p class="text-xs text-slate-400">Guarda los <strong id="banner-session-count" class="text-emerald-400">0 cofres</strong> de esta sesión en tu historial y reinicia el contador de partida.</p>
+        </div>
+      </div>
+      <button onclick="saveCurrentMatch()" class="btn-tactile w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-6 py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/15 shrink-0">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar Partida Actual
+      </button>
+    </section>
+
+    <!-- Calculadora de Próxima Partida (Modo Escuadrón / Hora del Tesoro) & Historial -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      
+      <!-- Calculadora de Próxima Partida -->
+      <div class="lg:col-span-6 bg-pirate-card border border-pirate-border rounded-2xl p-5">
+        <h3 class="font-display font-bold text-lg text-white flex items-center gap-2 mb-1">
+          <i class="fa-solid fa-users text-sky-400"></i> Simulador Próxima Partida
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Calcula tus opciones reales en la siguiente partida según el total de cofres de todo tu escuadrón.</p>
+
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between text-xs font-semibold text-slate-300 mb-1.5">
+              <label for="squad-chests">Cofres totales del escuadrón en la partida:</label>
+              <span id="squad-chests-val" class="text-sky-400 font-bold text-sm">70 cofres</span>
+            </div>
+            <input type="range" id="squad-chests" min="1" max="150" value="70" oninput="updateSimulator()" class="w-full accent-sky-400 cursor-pointer h-2 bg-slate-800 rounded-lg">
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1">
+              <button onclick="setSimChests(10)" class="hover:text-slate-300">Solo (10)</button>
+              <button onclick="setSimChests(40)" class="hover:text-slate-300">Escuadrón normal (40)</button>
+              <button onclick="setSimChests(70)" class="hover:text-slate-300">Ruteo intenso (70)</button>
+              <button onclick="setSimChests(100)" class="hover:text-slate-300">Full barrido (100)</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Horario / Multiplicador del Servidor:</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="setMultiplier(1)" id="mult-1" class="mult-btn bg-sky-500/20 border border-sky-500 text-sky-300 font-semibold py-2 px-2 rounded-xl text-xs text-center transition">
+                Normal (1x)<br><span class="text-[10px] opacity-80">1 en 137.5k</span>
+              </button>
+              <button type="button" onclick="setMultiplier(1.5)" id="mult-1.5" class="mult-btn bg-slate-900 border border-slate-700 text-slate-400 hover:text-slate-200 font-semibold py-2 px-2 rounded-xl text-xs text-center transition">
+                Hora Tesoro 1.5x<br><span class="text-[10px] opacity-80">1 en 91.6k</span>
+              </button>
+              <button type="button" onclick="setMultiplier(2)" id="mult-2" class="mult-btn bg-slate-900 border border-slate-700 text-slate-400 hover:text-slate-200 font-semibold py-2 px-2 rounded-xl text-xs text-center transition">
+                Hora Tesoro 2x<br><span class="text-[10px] opacity-80">1 en 68.7k</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Resultado de la simulación -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-400">Probabilidad en esa partida:</div>
+              <div id="sim-prob" class="font-display font-bold text-3xl text-sky-400 mt-0.5">0.051%</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-slate-400">Equivale a ganar:</div>
+              <div id="sim-odds" class="text-sm font-bold text-white mt-0.5">1 de cada 1,965 partidas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registro Histórico de Partidas -->
+      <div class="lg:col-span-6 bg-pirate-card border border-pirate-border rounded-2xl p-5 flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-pirate-gold"></i> Historial de Partidas Guardadas
+          </h3>
+          <span id="history-count" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full font-semibold">0 partidas</span>
+        </div>
+
+        <div id="history-list" class="flex-1 overflow-y-auto max-h-64 space-y-2 pr-1">
+          <!-- Se llena dinámicamente con JS -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
   <script>
     // Constante oficial de probabilidad (1 en 137,500)
     const BASE_ODDS = 137500;
-    const STORAGE_KEY = 'fortnite_pirate_token_tracker_v2';
+    const STORAGE_KEY = 'fortnite_pirate_token_tracker_v1';
 
-    // Estado inicial pre-cargado con los datos exactos del usuario y teclas por defecto
+    // Estado inicial pre-cargado con los datos exactos del usuario
     const DEFAULT_STATE = {
       normal: 1348,
       gomu: 106,
       sessionNormal: 0,
       sessionGomu: 0,
-      keyNormal: ',',
-      keyGomu: '.',
       history: []
     };
 
     let state = loadState();
     let currentMultiplier = 1;
-    let listeningKeyType = null; // 'normal' o 'gomu' si estamos esperando nueva tecla
 
-    // Web Audio API para feedback sonoro (sin URLs externas)
-    let audioCtx = null;
-    function playBeep(type = 'normal') {
-<!-- ... existing code ... -->
     // Cargar estado desde localStorage
     function loadState() {
       try {
@@ -69,8 +400,6 @@
             gomu: typeof parsed.gomu === 'number' ? parsed.gomu : DEFAULT_STATE.gomu,
             sessionNormal: typeof parsed.sessionNormal === 'number' ? parsed.sessionNormal : 0,
             sessionGomu: typeof parsed.sessionGomu === 'number' ? parsed.sessionGomu : 0,
-            keyNormal: typeof parsed.keyNormal === 'string' ? parsed.keyNormal : DEFAULT_STATE.keyNormal,
-            keyGomu: typeof parsed.keyGomu === 'string' ? parsed.keyGomu : DEFAULT_STATE.keyGomu,
             history: Array.isArray(parsed.history) ? parsed.history : []
           };
         }
@@ -88,7 +417,61 @@
         console.error('Error guardando en localStorage:', e);
       }
     }
-<!-- ... existing code ... -->
+
+    // Sumar o restar cofres
+    function addChests(type, amount) {
+      if (type === 'normal') {
+        if (state.normal + amount < 0) return;
+        state.normal += amount;
+        state.sessionNormal = Math.max(0, state.sessionNormal + amount);
+      } else if (type === 'gomu') {
+        if (state.gomu + amount < 0) return;
+        state.gomu += amount;
+        state.sessionGomu = Math.max(0, state.sessionGomu + amount);
+      }
+      saveState();
+      render();
+    }
+
+    // Guardar partida actual en historial
+    function saveCurrentMatch() {
+      const sessionSum = state.sessionNormal + state.sessionGomu;
+      if (sessionSum === 0) {
+        showToast('Suma al menos 1 cofre en la sesión actual para guardar la partida', 'warning');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString([], { day: '2-digit', month: 'short' });
+
+      state.history.unshift({
+        id: Date.now(),
+        timestamp: `${dateStr}, ${timeStr}`,
+        normal: state.sessionNormal,
+        gomu: state.sessionGomu,
+        total: sessionSum
+      });
+
+      // Mantener máximo 50 partidas recientes
+      if (state.history.length > 50) {
+        state.history.pop();
+      }
+
+      state.sessionNormal = 0;
+      state.sessionGomu = 0;
+      saveState();
+      render();
+      showToast(`Partida guardada (+${sessionSum} cofres registrados)`, 'success');
+    }
+
+    // Eliminar una entrada del historial (solo borra el registro visual, no resta del total global)
+    function deleteHistoryItem(id) {
+      state.history = state.history.filter(item => item.id !== id);
+      saveState();
+      renderHistory();
+    }
+
     // Renderizar toda la interfaz
     function render() {
       const total = state.normal + state.gomu;
@@ -99,38 +482,138 @@
       document.getElementById('count-gomu').textContent = state.gomu.toLocaleString('es-MX');
       document.getElementById('total-cofres').textContent = total.toLocaleString('es-MX');
 
-      // Actualizar visualización de teclas en banner y modal
-      const kNorm = (state.keyNormal === ' ') ? 'Espacio' : state.keyNormal.toUpperCase();
-      const kGomu = (state.keyGomu === ' ') ? 'Espacio' : state.keyGomu.toUpperCase();
-      
-      const kbDispNormal = document.getElementById('kb-disp-normal');
-      const kbDispGomu = document.getElementById('kb-disp-gomu');
-      if (kbDispNormal) kbDispNormal.textContent = kNorm;
-      if (kbDispGomu) kbDispGomu.textContent = kGomu;
-
-      const bindLabelNormal = document.getElementById('bind-label-normal');
-      const bindLabelGomu = document.getElementById('bind-label-gomu');
-      if (bindLabelNormal) bindLabelNormal.textContent = kNorm;
-      if (bindLabelGomu) bindLabelGomu.textContent = kGomu;
-
       // Actualizar contadores de sesión
       document.getElementById('session-normal').textContent = `+${state.sessionNormal}`;
-<!-- ... existing code ... -->
-    // Funciones de Modales
-    function openKeybindModal() {
-      listeningKeyType = null;
-      document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-keyboard text-sky-400"></i> Configurar Atajos';
-      document.getElementById('modal-keybind-content').classList.remove('hidden');
-      document.getElementById('modal-edit-content').classList.add('hidden');
-      document.getElementById('modal-reset-content').classList.add('hidden');
-      document.getElementById('modal-overlay').classList.remove('hidden');
-      document.getElementById('modal-overlay').classList.add('flex');
+      document.getElementById('session-gomu').textContent = `+${state.sessionGomu}`;
+      document.getElementById('session-total').textContent = `+${sessionTotal}`;
+      document.getElementById('banner-session-count').textContent = `${sessionTotal} cofre${sessionTotal === 1 ? '' : 's'}`;
+
+      // Cálculo de probabilidad acumulada exacta: 1 - (1 - 1/137500)^total
+      const prob = 1 - Math.pow(1 - (1 / BASE_ODDS), total);
+      const probPercent = (prob * 100);
+      document.getElementById('prob-acumulada').textContent = `${probPercent.toFixed(3)}%`;
+
+      if (prob > 0) {
+        const oneInX = Math.round(1 / prob);
+        document.getElementById('prob-fraccion').textContent = `(1 de cada ${oneInX.toLocaleString('es-MX')} jugadores con tus cofres)`;
+      } else {
+        document.getElementById('prob-fraccion').textContent = `(Abre tu primer cofre para comenzar)`;
+      }
+
+      // Actualizar barra de hitos
+      updateMilestones(total);
+      renderHistory();
     }
 
+    function updateMilestones(total) {
+      const milestones = [
+        { target: 1000, label: '1,000 cofres (0.72% prob.)', badge: '1,000' },
+        { target: 10000, label: '10,000 cofres (7.01% prob.)', badge: '10,000' },
+        { target: 95308, label: '95,308 cofres (50.0% prob.)', badge: '95,308' },
+        { target: 137500, label: '137,500 cofres (63.2% prob.)', badge: '137,500' }
+      ];
+
+      let currentM = milestones.find(m => total < m.target) || milestones[milestones.length - 1];
+      const pct = Math.min(100, (total / currentM.target) * 100);
+
+      document.getElementById('next-milestone-badge').textContent = total >= 137500 ? '¡Meta máxima superada!' : `Siguiente hito: ${currentM.badge}`;
+      document.getElementById('milestone-label').textContent = `Progreso hacia ${currentM.label}`;
+      document.getElementById('milestone-percent').textContent = `${pct.toFixed(1)}%`;
+      document.getElementById('milestone-bar').style.width = `${pct}%`;
+
+      // Iluminar hitos ya alcanzados
+      const badges = [
+        { id: 'm-1k', val: 1000 },
+        { id: 'm-10k', val: 10000 },
+        { id: 'm-95k', val: 95308 },
+        { id: 'm-137k', val: 137500 }
+      ];
+
+      badges.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (total >= b.val) {
+          el.className = 'p-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold';
+        } else {
+          el.className = 'p-1 rounded bg-slate-900/60 text-slate-500';
+        }
+      });
+    }
+
+    // Simulador de próxima partida
+    function setSimChests(val) {
+      document.getElementById('squad-chests').value = val;
+      updateSimulator();
+    }
+
+    function setMultiplier(mult) {
+      currentMultiplier = mult;
+      document.querySelectorAll('.mult-btn').forEach(btn => {
+        btn.className = 'mult-btn bg-slate-900 border border-slate-700 text-slate-400 hover:text-slate-200 font-semibold py-2 px-2 rounded-xl text-xs text-center transition';
+      });
+      const activeBtn = document.getElementById(`mult-${mult}`);
+      if (activeBtn) {
+        activeBtn.className = 'mult-btn bg-sky-500/20 border border-sky-500 text-sky-300 font-semibold py-2 px-2 rounded-xl text-xs text-center transition';
+      }
+      updateSimulator();
+    }
+
+    function updateSimulator() {
+      const chests = parseInt(document.getElementById('squad-chests').value, 10) || 1;
+      document.getElementById('squad-chests-val').textContent = `${chests} cofres`;
+
+      const effectiveOdds = BASE_ODDS / currentMultiplier;
+      const matchProb = 1 - Math.pow(1 - (1 / effectiveOdds), chests);
+      const matchPercent = (matchProb * 100).toFixed(3);
+      const oneInMatches = Math.round(1 / matchProb);
+
+      document.getElementById('sim-prob').textContent = `${matchPercent}%`;
+      document.getElementById('sim-odds').textContent = `1 de cada ${oneInMatches.toLocaleString('es-MX')} partidas`;
+    }
+
+    // Renderizar historial
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      document.getElementById('history-count').textContent = `${state.history.length} partida${state.history.length === 1 ? '' : 's'}`;
+
+      if (state.history.length === 0) {
+        list.innerHTML = `
+          <div class="h-40 flex flex-col items-center justify-center text-center border border-dashed border-slate-800 rounded-xl p-4 text-slate-500">
+            <i class="fa-solid fa-scroll text-2xl mb-2 opacity-60"></i>
+            <p class="text-xs">Aún no has guardado partidas.<br>Suma cofres y pulsa <strong>"Guardar Partida Actual"</strong> al terminar.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = state.history.map((item, index) => `
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-white">Partida #${state.history.length - index}</span>
+              <span class="text-[11px] text-slate-500">${item.timestamp}</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs mt-1">
+              <span class="text-amber-400"><i class="fa-solid fa-box-open mr-1"></i>${item.normal}</span>
+              <span class="text-purple-400"><i class="fa-solid fa-burst mr-1"></i>${item.gomu}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-display font-bold text-sm px-2.5 py-1 rounded-lg">
+              +${item.total}
+            </span>
+            <button onclick="deleteHistoryItem(${item.id})" title="Eliminar registro" class="text-slate-600 hover:text-rose-400 transition p-1">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Funciones de Modales
     function openEditModal() {
-      listeningKeyType = null;
       document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-pirate-gold"></i> Editar Contadores';
-      document.getElementById('modal-keybind-content').classList.add('hidden');
+      document.getElementById('edit-normal').value = state.normal;
+      document.getElementById('edit-gomu').value = state.gomu;
       document.getElementById('modal-edit-content').classList.remove('hidden');
       document.getElementById('modal-reset-content').classList.add('hidden');
       document.getElementById('modal-overlay').classList.remove('hidden');
@@ -138,9 +621,7 @@
     }
 
     function openResetModal() {
-      listeningKeyType = null;
       document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Reiniciar Contadores';
-      document.getElementById('modal-keybind-content').classList.add('hidden');
       document.getElementById('modal-edit-content').classList.add('hidden');
       document.getElementById('modal-reset-content').classList.remove('hidden');
       document.getElementById('modal-overlay').classList.remove('hidden');
@@ -148,64 +629,56 @@
     }
 
     function closeModal() {
-      listeningKeyType = null;
       document.getElementById('modal-overlay').classList.add('hidden');
       document.getElementById('modal-overlay').classList.remove('flex');
     }
 
-    function startListeningKey(type) {
-      listeningKeyType = type;
-      const btnId = type === 'normal' ? 'btn-bind-normal' : 'btn-bind-gomu';
-      const btn = document.getElementById(btnId);
-      if (btn) {
-        btn.textContent = 'Presiona una tecla...';
-        btn.className = 'bg-sky-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition animate-pulse';
-      }
+    function saveManualEdit() {
+      const newNormal = Math.max(0, parseInt(document.getElementById('edit-normal').value, 10) || 0);
+      const newGomu = Math.max(0, parseInt(document.getElementById('edit-gomu').value, 10) || 0);
+      state.normal = newNormal;
+      state.gomu = newGomu;
+      saveState();
+      render();
+      closeModal();
+      showToast('Contadores actualizados correctamente', 'success');
     }
 
-    // Event Listener global para Atajos de Teclado Personalizados
-    window.addEventListener('keydown', (e) => {
-      // Si estamos en modo captura de tecla para reasignar
-      if (listeningKeyType) {
-        e.preventDefault();
-        const pressedKey = e.key.toLowerCase();
-        if (listeningKeyType === 'normal') {
-          state.keyNormal = pressedKey;
-          showToast(`Tecla para cofre normal actualizada a: [${pressedKey.toUpperCase()}]`, 'success');
-        } else if (listeningKeyType === 'gomu') {
-          state.keyGomu = pressedKey;
-          showToast(`Tecla para cofre de fruta actualizada a: [${pressedKey.toUpperCase()}]`, 'success');
-        }
-        saveState();
-        render();
+    function resetToDefault() {
+      state = { ...DEFAULT_STATE, history: [] };
+      saveState();
+      render();
+      closeModal();
+      showToast('Valores iniciales restaurados (1,454 cofres)', 'success');
+    }
 
-        // Resetear botón de captura
-        const btnId = listeningKeyType === 'normal' ? 'btn-bind-normal' : 'btn-bind-gomu';
-        const btn = document.getElementById(btnId);
-        if (btn) {
-          btn.textContent = 'Cambiar Tecla';
-          btn.className = 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition';
-        }
-        listeningKeyType = null;
-        return;
+    function resetToZero() {
+      state = { normal: 0, gomu: 0, sessionNormal: 0, sessionGomu: 0, history: [] };
+      saveState();
+      render();
+      closeModal();
+      showToast('Todos los contadores se han reiniciado a 0', 'success');
+    }
+
+    // Notificación Toast
+    let toastTimeout;
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      document.getElementById('toast-msg').textContent = msg;
+
+      if (type === 'warning') {
+        icon.className = 'fa-solid fa-circle-exclamation text-amber-400';
+      } else {
+        icon.className = 'fa-solid fa-circle-check text-emerald-400';
       }
 
-      // Evitar que actúe si el usuario está escribiendo en un input o modal abierto
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-      if (!document.getElementById('modal-overlay').classList.contains('hidden') && !listeningKeyType) return;
-
-      const key = e.key.toLowerCase();
-
-      if (key === state.keyNormal) {
-        e.preventDefault();
-        addChests('normal', 1);
-        showToast(`+1 Cofre Normal [${key.toUpperCase()}]`, 'success');
-      } else if (key === state.keyGomu) {
-        e.preventDefault();
-        addChests('gomu', 1);
-        showToast(`+1 Cofre Fruta [${key.toUpperCase()}]`, 'success');
-      }
-    });
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+      }, 2800);
+    }
 
     // Inicializar al cargar
     window.addEventListener('DOMContentLoaded', () => {
